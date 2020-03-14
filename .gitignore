@@ -1,0 +1,6 @@
+﻿CaTD/.vs
+CaTD/Library
+CaTD/obj
+CaTD/Logs
+*.csproj
+*.sln
