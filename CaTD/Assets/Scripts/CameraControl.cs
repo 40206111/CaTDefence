@@ -11,6 +11,14 @@ public class CameraControl : MonoBehaviour
     public int invertY = -1;
     Camera cam;
 
+    public void CenterOnGrid()
+    {
+        Vector3 camPos = Grid.squares[0].pos + Grid.squares[Grid.squares.Count - 1].pos;
+        camPos /= 2;
+        camPos.z = -10;
+        transform.position = camPos;
+    }
+
     void Awake()
     {
         cam = GetComponent<Camera>();

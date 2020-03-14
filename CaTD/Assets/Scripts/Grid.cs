@@ -5,23 +5,18 @@ using UnityEngine;
 public class Grid : MonoBehaviour
 {
     [SerializeField] GameObject aBox;
-    [SerializeField] Transform cameraTrans;
+    [SerializeField] CameraControl cameraControl;
 
     public int width;
     public int height;
 
-    List<Square> squares = new List<Square>();
+    public static List<Square> squares = new List<Square>();
 
     // Start is called before the first frame update
     void Awake()
     {
         GenerateGrid();
-        RandomBoxes();
-
-        Vector3 camPos = squares[0].pos + squares[squares.Count - 1].pos;
-        camPos /= 2;
-        camPos.z = -10;
-        cameraTrans.position = camPos;
+        cameraControl.CenterOnGrid();
     }
 
     void GenerateGrid()

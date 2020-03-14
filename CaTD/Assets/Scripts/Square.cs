@@ -25,10 +25,39 @@ public class Square : MonoBehaviour
     public void AddBox()
     {
         sr.sprite = boxSprite;
+        hasBox = true;
+    }
+
+    public void RemoveBox()
+    {
+        sr.sprite = squareSprite;
+        hasBox = false;
     }
 
     void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
+    }
+
+    void OnMouseEnter()
+    {
+        sr.material.color = Color.green;
+    }
+
+    private void OnMouseOver()
+    {
+        if (Input.GetMouseButtonDown(0) && !hasBox)
+        {
+            AddBox();
+        }
+        else if (Input.GetMouseButtonDown(1) && hasBox)
+        {
+            RemoveBox();
+        }
+    }
+
+    void OnMouseExit()
+    {
+        sr.material.color = Color.white;
     }
 }
