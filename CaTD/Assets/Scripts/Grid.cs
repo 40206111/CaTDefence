@@ -4,25 +4,13 @@ using UnityEngine;
 
 public class Grid : MonoBehaviour
 {
-    [SerializeField] Transform cameraTrans;
     [SerializeField] GameObject aBox;
+    [SerializeField] Transform cameraTrans;
+
     public int width;
     public int height;
 
-    class Box
-    {
-        public GameObject box;
-        public bool hasBox => box != null;
-        public Vector3 pos;
-
-        public Box(Vector3 newPos)
-        {
-            pos = newPos;
-            box = null;
-        }
-    }
-
-    List<Box> boxes = new List<Box>();
+    List<Square> squares = new List<Square>();
 
     // Start is called before the first frame update
     void Awake()
@@ -30,7 +18,7 @@ public class Grid : MonoBehaviour
         GenerateGrid();
         RandomBoxes();
 
-        Vector3 camPos = boxes[0].pos + boxes[boxes.Count - 1].pos;
+        Vector3 camPos = squares[0].pos + squares[squares.Count - 1].pos;
         camPos /= 2;
         camPos.z = -10;
         cameraTrans.position = camPos;
@@ -43,7 +31,8 @@ public class Grid : MonoBehaviour
         {
             for (int j = 0; j < width; ++j)
             {
-                boxes.Add(new Box(new Vector3(start.x + j, start.y + (0.5f * j), (0.5f * j) + i)));
+                squares.Add(Instantiate(aBox, transform).GetComponent<Square>());
+                squares[squares.Count - 1].CreateSquare(new Vector3(start.x + j, start.y + (0.5f * j), (0.5f * j) + i));
             }
             start.x -= 1;
             start.y += 0.5f;
@@ -52,13 +41,12 @@ public class Grid : MonoBehaviour
 
     void RandomBoxes()
     {
-        for (int i = 0; i < boxes.Count; ++i)
+        for (int i = 0; i < squares.Count; ++i)
         {
             int r = Random.Range(0, 2);
             if (r == 1)
             {
-                aBox.transform.position = boxes[i].pos;
-                boxes[i].box = Instantiate(aBox, transform);
+                squares[i].AddBox();
             }
         }
     }
@@ -66,7 +54,7 @@ public class Grid : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
-        foreach (Box point in boxes)
+        foreach (Square point in squares)
         {
             Gizmos.DrawSphere(point.pos, 0.2f);
         }
