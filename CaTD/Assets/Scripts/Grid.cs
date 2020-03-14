@@ -7,8 +7,8 @@ public class Grid : MonoBehaviour
     [SerializeField] GameObject aBox;
     [SerializeField] CameraControl cameraControl;
 
-    public int width;
-    public int height;
+    static public int width = 13;
+    static public int height = 20;
 
     public static List<Square> squares = new List<Square>();
 
