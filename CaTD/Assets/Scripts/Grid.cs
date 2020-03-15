@@ -12,15 +12,18 @@ public class Grid : MonoBehaviour
 
     public static List<Square> squares = new List<Square>();
 
-    // Start is called before the first frame update
     void Awake()
     {
-        GenerateGrid();
+        GenerateGrid(width, height);
         cameraControl.CenterOnGrid();
     }
 
-    void GenerateGrid()
+    //This method will need to be called at the start of a level to generate the correct size of grid
+    void GenerateGrid(int w, int h)
     {
+        //store width and height for easy access
+        width = w;
+        height = h;
         Vector2 start = new Vector2(0, 0);
         for (int i = 0; i < height; ++i)
         {
@@ -35,6 +38,8 @@ public class Grid : MonoBehaviour
         }
     }
 
+    //Debug method to populate with random boxes to test map
+    //TODO: change to stick to grid rules to allow for pathing testing
     void RandomBoxes()
     {
         for (int i = 0; i < squares.Count; ++i)

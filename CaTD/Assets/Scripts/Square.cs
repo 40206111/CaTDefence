@@ -69,6 +69,7 @@ public class Square : MonoBehaviour
 
     private void LateUpdate()
     {
+        //set material colour based on state
         if (state.HasFlag(eSquareState.selected))
         {
             SetMaterialColour(selectColour);
@@ -94,6 +95,7 @@ public class Square : MonoBehaviour
 
     void OnMouseEnter()
     {
+        //tile is selected while mouse is over it.
         state |= eSquareState.selected;
     }
 
@@ -115,6 +117,7 @@ public class Square : MonoBehaviour
 
     private void RemovePathIndexes()
     {
+        //remove highlighted state before clearing path indexes
         foreach (int index in drawPathIndexes)
         {
             Grid.squares[index].state &= ~eSquareState.highlighted;
@@ -124,28 +127,28 @@ public class Square : MonoBehaviour
 
     private void OnMouseOver()
     {
-        if (Input.GetMouseButtonDown(0) ||
-            Input.GetMouseButtonDown(1))
+        //if left or right click
+        if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
         {
             RemovePathIndexes();
-            highlightColour = Input.GetMouseButtonDown(1) ? Color.red : Color.yellow;
+            highlightColour = Input.GetMouseButtonDown(1) ? Color.red : Color.yellow; //red for delete, yellow for create
             state |= eSquareState.highlighted;
             startSquare = gridCoord;
             endSquare = startSquare;
             drawHorizontal = true;
             drawPathIndexes.Add(GridUtilities.TwoToOne(startSquare));
         }
-        else if (Input.GetMouseButton(0) || Input.GetMouseButton(1))
+        else if (Input.GetMouseButton(0) || Input.GetMouseButton(1)) //left or right click down
         {
+            //skip if same tile as last time
             if (gridCoord == endSquare)
             {
                 return;
             }
             bool prevDrawHor = drawHorizontal;
             drawHorizontal = IsHorizontal(startSquare, gridCoord, drawHorizontal);
-            int diff = drawHorizontal ? startSquare.x - gridCoord.x : startSquare.y - gridCoord.y;
-            int direction = diff < 0 ? 1 : -1;
 
+            //If we've changed direction our whole list is wrong
             if (prevDrawHor != drawHorizontal)
             {
                 RemovePathIndexes();
@@ -154,7 +157,9 @@ public class Square : MonoBehaviour
 
                 if (drawHorizontal)
                 {
-                    int boxCount = Mathf.Abs(diff) + 1;
+                    int diff = startSquare.x - gridCoord.x;
+                    int direction = diff < 0 ? 1 : -1;
+                    int boxCount = Mathf.Abs(diff) + 1; //plus one to include starting box
 
                     for (int i = 0; i < boxCount; ++i)
                     {
@@ -165,7 +170,10 @@ public class Square : MonoBehaviour
                 }
                 else
                 {
-                    int boxCount = Mathf.Abs(diff) + 1;
+
+                    int diff = startSquare.y - gridCoord.y;
+                    int direction = diff < 0 ? 1 : -1;
+                    int boxCount = Mathf.Abs(diff) + 1; //plus one to include starting box
 
                     for (int i = 0; i < boxCount; ++i)
                     {
@@ -178,12 +186,15 @@ public class Square : MonoBehaviour
             }
             else if (drawHorizontal)
             {
-                diff = startSquare.x - endSquare.x;
-                direction = diff < 0 ? 1 : -1;
+                int diff = startSquare.x - endSquare.x;
+                int direction = diff < 0 ? 1 : -1;
                 int newDiff = endSquare.x - gridCoord.x;
                 int newDir = newDiff < 0 ? 1 : -1;
                 int boxCount = Mathf.Abs(newDiff);
 
+                //We've only changed direction if the start and end square aren't the same
+                //if they are the same we must have added new squares not removed any so
+                //we avoid this if by checking if diff = 0
                 if (newDir != direction && diff != 0)
                 {
                     for (int i = 0; i < boxCount; ++i)
@@ -205,12 +216,15 @@ public class Square : MonoBehaviour
             }
             else if (!drawHorizontal)
             {
-                diff = startSquare.y - endSquare.y;
-                direction = diff < 0 ? 1 : -1;
+                int diff = startSquare.y - endSquare.y;
+                int direction = diff < 0 ? 1 : -1;
                 int newDiff = endSquare.y - gridCoord.y;
                 int newDir = newDiff < 0 ? 1 : -1;
                 int boxCount = Mathf.Abs(newDiff);
 
+                //We've only changed direction if the start and end square aren't the same
+                //if they are the same we must have added new squares not removed any so
+                //we avoid this if by checking if diff = 0
                 if (newDir != direction && direction != 0)
                 {
                     for (int i = 0; i < boxCount; ++i)
@@ -257,6 +271,7 @@ public class Square : MonoBehaviour
 
     void OnMouseExit()
     {
+        //while mouse is over tile it is selected
         state &= ~eSquareState.selected;
     }
 }
