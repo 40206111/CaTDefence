@@ -10,7 +10,7 @@ public static class GridUtilities
     // Convert from box ID to grid coordinates
     public static Vector2Int OneToTwo(int val)
     {
-        return new Vector2Int(val % gridWidth, val / gridHeight);
+        return new Vector2Int(val % gridWidth, val / gridWidth);
     }
 
     // Convert from grid coordinates to box ID

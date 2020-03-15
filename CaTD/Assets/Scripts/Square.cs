@@ -125,6 +125,17 @@ public class Square : MonoBehaviour
         drawPathIndexes.Clear();
     }
 
+    string DrawPathIndexesString()
+    {
+        string output = "";
+        foreach (int index in drawPathIndexes)
+        {
+            output += GridUtilities.OneToTwo(index).ToString();
+            output += ", ";
+        }
+        return output;
+    }
+
     private void OnMouseOver()
     {
         //if left or right click
@@ -154,96 +165,49 @@ public class Square : MonoBehaviour
                 RemovePathIndexes();
 
                 int startIndex = GridUtilities.TwoToOne(startSquare);
+                int diff = drawHorizontal ? startSquare.x - gridCoord.x : startSquare.y - gridCoord.y;
+                int direction = diff < 0 ? 1 : -1;
+                int boxCount = Mathf.Abs(diff) + 1; //plus one to include starting box
+                int modifier = drawHorizontal ? 1 : Grid.width;
 
-                if (drawHorizontal)
+                for (int i = 0; i < boxCount; ++i)
                 {
-                    int diff = startSquare.x - gridCoord.x;
-                    int direction = diff < 0 ? 1 : -1;
-                    int boxCount = Mathf.Abs(diff) + 1; //plus one to include starting box
-
-                    for (int i = 0; i < boxCount; ++i)
-                    {
-                        int index = startIndex + (i * direction);
-                        drawPathIndexes.Add(index);
-                        Grid.squares[index].state |= eSquareState.highlighted;
-                    }
-                }
-                else
-                {
-
-                    int diff = startSquare.y - gridCoord.y;
-                    int direction = diff < 0 ? 1 : -1;
-                    int boxCount = Mathf.Abs(diff) + 1; //plus one to include starting box
-
-                    for (int i = 0; i < boxCount; ++i)
-                    {
-                        int index = startIndex + (Grid.width * i * direction);
-                        drawPathIndexes.Add(index);
-                        Grid.squares[index].state |= eSquareState.highlighted;
-                    }
-
+                    int index = startIndex + (modifier * i * direction);
+                    drawPathIndexes.Add(index);
+                    Grid.squares[index].state |= eSquareState.highlighted;
                 }
             }
-            else if (drawHorizontal)
+            else
             {
-                int diff = startSquare.x - endSquare.x;
+                int diff = drawHorizontal ? startSquare.x - endSquare.x : startSquare.y - endSquare.y;
                 int direction = diff < 0 ? 1 : -1;
-                int newDiff = endSquare.x - gridCoord.x;
+                int newDiff = drawHorizontal ? endSquare.x - gridCoord.x : endSquare.y - gridCoord.y;
                 int newDir = newDiff < 0 ? 1 : -1;
                 int boxCount = Mathf.Abs(newDiff);
+                int modifier = drawHorizontal ? 1 : Grid.width;
 
-                //We've only changed direction if the start and end square aren't the same
-                //if they are the same we must have added new squares not removed any so
-                //we avoid this if by checking if diff = 0
-                if (newDir != direction && diff != 0)
+                for (int i = 0; i < boxCount; ++i)
                 {
-                    for (int i = 0; i < boxCount; ++i)
+                    if (newDir != direction && diff != 0)
                     {
+                        if (drawPathIndexes.Count == 1)
+                        {
+                            direction *= -1;
+                            continue;
+                        }
                         int index = drawPathIndexes[drawPathIndexes.Count - 1];
                         Grid.squares[index].state &= ~eSquareState.highlighted;
                         drawPathIndexes.Remove(index);
                     }
-                }
-                else
-                {
-                    for (int i = 0; i < boxCount; ++i)
+                    else
                     {
-                        int index = drawPathIndexes[drawPathIndexes.Count - 1] + newDir;
+                        int index = drawPathIndexes[drawPathIndexes.Count - 1] + (modifier * newDir);
                         Grid.squares[index].state |= eSquareState.highlighted;
                         drawPathIndexes.Add(index);
                     }
                 }
             }
-            else if (!drawHorizontal)
-            {
-                int diff = startSquare.y - endSquare.y;
-                int direction = diff < 0 ? 1 : -1;
-                int newDiff = endSquare.y - gridCoord.y;
-                int newDir = newDiff < 0 ? 1 : -1;
-                int boxCount = Mathf.Abs(newDiff);
 
-                //We've only changed direction if the start and end square aren't the same
-                //if they are the same we must have added new squares not removed any so
-                //we avoid this if by checking if diff = 0
-                if (newDir != direction && direction != 0)
-                {
-                    for (int i = 0; i < boxCount; ++i)
-                    {
-                        int index = drawPathIndexes[drawPathIndexes.Count - 1];
-                        Grid.squares[index].state &= ~eSquareState.highlighted;
-                        drawPathIndexes.Remove(index);
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < boxCount; ++i)
-                    {
-                        int index = drawPathIndexes[drawPathIndexes.Count - 1] + (Grid.width * newDir);
-                        Grid.squares[index].state |= eSquareState.highlighted;
-                        drawPathIndexes.Add(index);
-                    }
-                }
-            }
             endSquare = gridCoord;
         }
     }
