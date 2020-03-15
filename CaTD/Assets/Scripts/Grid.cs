@@ -27,7 +27,8 @@ public class Grid : MonoBehaviour
             for (int j = 0; j < width; ++j)
             {
                 squares.Add(Instantiate(aBox, transform).GetComponent<Square>());
-                squares[squares.Count - 1].CreateSquare(new Vector3(start.x + j, start.y + (0.5f * j), (0.5f * j) + i));
+                squares[squares.Count - 1].CreateSquare(new Vector3(start.x + j, start.y + (0.5f * j), (0.5f * j) + i), 
+                                                        new Vector2Int(j, i));
             }
             start.x -= 1;
             start.y += 0.5f;
