@@ -107,6 +107,8 @@ public class Square : MonoBehaviour
             if (Input.GetMouseButtonUp(0))
             {
                 Grid.squares[index].AddBox();
+
+                PathChecker.Instance.AddBox(index);
             }
             else if (Input.GetMouseButtonUp(1))
             {
