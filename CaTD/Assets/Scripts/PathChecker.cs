@@ -19,7 +19,7 @@ public class PCNode
             PathChecker.Instance.UpdateDistanceText(id);
         }
     }
-    
+
     public int distSource = -1;
     public int faction = -1; // 0 is floor
     public int id = -1;
@@ -102,7 +102,7 @@ public class PCNode
         }
     }
 
-    public void CalculateDistance()
+    public void CalculateDistance(ref List<int> nodeQueue)
     {
         // If node has a distance, leave
         if (Distance != -1)
@@ -128,12 +128,19 @@ public class PCNode
         Distance = lowest + 1;
         foreach (PCNode n in neighbours)
         {
-            if (n.faction == faction && n.Distance == lowest)
+            if (n.faction == faction)
             {
-                if (!uppers.Contains(n))
+                if (n.Distance == lowest)
                 {
-                    uppers.Add(n);
-                    n.AdoptLower(this);
+                    if (!uppers.Contains(n))
+                    {
+                        uppers.Add(n);
+                        n.AdoptLower(this);
+                    }
+                }
+                else if(n.Distance > Distance + 1)
+                {
+                    nodeQueue.Add(n.id);
                 }
             }
         }
@@ -141,10 +148,10 @@ public class PCNode
 
     public void CalculateDistanceCascade(ref List<int> nodeQueue)
     {
-        CalculateDistance();
-        foreach(PCNode n in neighbours)
+        CalculateDistance(ref nodeQueue);
+        foreach (PCNode n in neighbours)
         {
-            if(n.faction == faction && n.Distance == -1 && !nodeQueue.Contains(n.id))
+            if (n.faction == faction && n.Distance == -1 && !nodeQueue.Contains(n.id))
             {
                 nodeQueue.Add(n.id);
             }
@@ -167,17 +174,6 @@ public class PCNode
         }
     }
 
-    public void UnmakeBox(ref List<int> nodeQueue)
-    {
-        foreach (PCNode n in lowers)
-        {
-            if (!nodeQueue.Contains(n.id))
-            {
-                nodeQueue.Add(n.id);
-            }
-        }
-    }
-
     public void RemoveLower(PCNode l)
     {
         if (lowers.Contains(l))
@@ -191,6 +187,17 @@ public class PCNode
         if (uppers.Contains(u))
         {
             uppers.Remove(u);
+        }
+    }
+
+    public void UnmakeBox(ref List<int> nodeQueue)
+    {
+        foreach (PCNode n in lowers)
+        {
+            if (!nodeQueue.Contains(n.id))
+            {
+                nodeQueue.Add(n.id);
+            }
         }
     }
 
@@ -225,7 +232,7 @@ public class PCNode
 
     public void NearbyOrphans(ref List<int> nodeQueue)
     {
-        foreach(PCNode n in neighbours)
+        foreach (PCNode n in neighbours)
         {
             if (n.faction == faction && n.Distance == -1 && !nodeQueue.Contains(n.id))
             {
@@ -366,9 +373,14 @@ public class PathChecker : MonoBehaviour
             nodes[recruits[i]].ChangeFaction(ref recruits, faction);
         }
         // Calculate distances
+        List<int> miscounted = new List<int>();
         foreach (int i in recruits)
         {
-            nodes[i].CalculateDistance();
+            nodes[i].CalculateDistance(ref miscounted);
+            for (int j = 0; j < miscounted.Count; ++j)
+            {
+                nodes[miscounted[j]].DistanceFix(ref miscounted);
+            }
         }
     }
 
@@ -386,12 +398,12 @@ public class PathChecker : MonoBehaviour
         }
 
         orphans.Clear();
-        foreach(int i in origins)
+        foreach (int i in origins)
         {
             nodes[i].NearbyOrphans(ref orphans);
         }
 
-        for(int i = 0; i < orphans.Count; ++i)
+        for (int i = 0; i < orphans.Count; ++i)
         {
             nodes[orphans[i]].CalculateDistanceCascade(ref orphans);
         }
@@ -400,5 +412,16 @@ public class PathChecker : MonoBehaviour
     public void UpdateDistanceText(int index)
     {
         nodeDistances[index].text = nodes[index].Distance.ToString();
+        nodeDistances[index].color = FancyColour(nodes[index].Distance);
+    }
+
+    private Color FancyColour(int distance)
+    {
+        Color returnColour = Color.black;
+        float loopCap = 50.0f;
+        returnColour.r = Mathf.Sin(Mathf.PI * 2.0f * distance / loopCap) * 0.5f + 0.5f;
+        returnColour.g = Mathf.Sin(Mathf.PI * 2.0f * (distance + (loopCap/3.0f)) / loopCap) * 0.5f + 0.5f;
+        returnColour.b = Mathf.Sin(Mathf.PI * 2.0f * (distance + (2.0f* loopCap/3.0f)) / loopCap) * 0.5f + 0.5f;
+        return returnColour;
     }
 }
