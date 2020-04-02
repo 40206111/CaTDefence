@@ -27,7 +27,7 @@ public class Square : MonoBehaviour
     static Vector2Int endSquare;
     static List<int> drawPathIndexes = new List<int>();
     static bool drawHorizontal;
-    static Color highlightColour;
+    public static Color highlightColour;
     static Color selectColour = Color.green;
     static Color resetColour;
 

@@ -10,12 +10,25 @@ using UnityEngine;
 /// </summary>
 public class UserInputHandler : MonoBehaviour
 {
+    [SerializeField] CameraControl camControl;
 
     void Update()
     {
         if (Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1))
         {
             Square.DrawBoxes();
+        }
+        else if (Input.GetMouseButtonDown(0))
+        {
+            Square.highlightColour = Color.yellow;
+        }
+        else if (Input.GetMouseButtonDown(1))
+        {
+            Square.highlightColour = Color.red;
+        }
+        else if (Input.GetKeyDown(KeyCode.C))
+        {
+            camControl.CenterOnGrid();
         }
     }
 }
