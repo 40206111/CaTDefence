@@ -10,6 +10,11 @@ public class Grid : MonoBehaviour
     static public int width = 13;
     static public int height = 20;
 
+    static public Square TopCorner;
+    static public Square BottomCorner;
+    static public Square LeftCorner;
+    static public Square RightCorner;
+
     public static List<Square> squares = new List<Square>();
 
     void Awake()
