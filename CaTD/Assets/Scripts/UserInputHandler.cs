@@ -30,5 +30,30 @@ public class UserInputHandler : MonoBehaviour
         {
             camControl.CenterOnGrid();
         }
+
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            if (Grid.enterance + 1 >= Grid.enterances.Count)
+            {
+                Grid.enterance = 0;
+            }
+            else
+            {
+                Grid.enterance++;
+            }
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            if (Grid.exit + 1 >= Grid.exits.Count)
+            {
+                Grid.exit = 0;
+            }
+            else
+            {
+                Grid.exit++;
+            }
+        }
     }
 }

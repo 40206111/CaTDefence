@@ -8,12 +8,17 @@ public class Grid : MonoBehaviour
     [SerializeField] CameraControl cameraControl;
 
     static public int width = 13;
-    static public int height = 20;
+    static public int height = 10;
 
     static public Square TopCorner;
     static public Square BottomCorner;
     static public Square LeftCorner;
     static public Square RightCorner;
+
+    static public int enterance = 0;
+    static public int exit = 0;
+    static public List<Vector2Int> enterances;
+    static public List<Vector2Int> exits;
 
     public static List<Square> squares = new List<Square>();
 
@@ -21,6 +26,22 @@ public class Grid : MonoBehaviour
     {
         GenerateGrid(width, height);
         cameraControl.CenterOnGrid();
+
+        enterances = new List<Vector2Int>();
+        for (int i = 1; i < Grid.width - 1; i++)
+        {
+            enterances.Add(Grid.squares[i].gridCoord);
+            Grid.squares[i].RemoveBox(force: true);
+        }
+
+        exits = new List<Vector2Int>();
+        for (int i = (Grid.squares.Count - Grid.width) + 1; i < Grid.squares.Count - 1; i++)
+        {
+            exits.Add(Grid.squares[i].gridCoord);
+            Grid.squares[i].RemoveBox(force: true);
+        }
+
+        AiPathing.MasterPath = AiPathing.CalculatePath(enterances, exits);
     }
 
     //This method will need to be called at the start of a level to generate the correct size of grid
@@ -37,6 +58,11 @@ public class Grid : MonoBehaviour
                 squares.Add(Instantiate(aBox, transform).GetComponent<Square>());
                 squares[squares.Count - 1].CreateSquare(new Vector3(start.x + j, start.y + (0.5f * j), (0.5f * j) + i), 
                                                         new Vector2Int(j, i));
+                if (i == 0 || i == height - 1 || j == 0 || j == width - 1)
+                {
+                    squares[squares.Count - 1].AddBox(force: true);
+                    squares[squares.Count - 1].edge = true;
+                }
             }
             start.x -= 1;
             start.y += 0.5f;
@@ -59,10 +85,43 @@ public class Grid : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.green;
-        foreach (Square point in squares)
+        //Gizmos.color = Color.green;
+        //foreach (Square point in squares)
+        //{
+        //    Gizmos.DrawSphere(point.pos, 0.2f);
+        //}
+
+        if (AiPathing.MasterPath == null) return;
+
+        Gizmos.color = Color.red;
+
+        var enterancePaths = AiPathing.MasterPath[GridUtilities.TwoToOne(enterances[enterance])];
+        var exitPaths = enterancePaths[GridUtilities.TwoToOne(exits[exit])];
+
+        DrawPath(exitPaths);
+    }
+
+    void DrawPath(Path path)
+    {
+        if (path == null) return;
+        if (path.FutureSquares == null) return;
+
+        foreach (Path p in path.FutureSquares)
         {
-            Gizmos.DrawSphere(point.pos, 0.2f);
+            DrawPath(path.Current, p);
         }
     }
+
+    void DrawPath(Square before, Path now)
+    {
+        Gizmos.DrawLine(before.pos, now.Current.pos);
+
+        if (now.FutureSquares == null) return;
+
+        foreach(Path path in now.FutureSquares)
+        {
+            DrawPath(now.Current, path);
+        }
+    }
+
 }
