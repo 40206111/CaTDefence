@@ -41,14 +41,15 @@ public class Square : MonoBehaviour
         gridCoord = coord;
     }
 
-    public void AddBox()
+    public bool AddBox()
     {
         if (hasBox)
         {
-            return;
+            return false;
         }
         sr.sprite = boxSprite;
         hasBox = true;
+        return true;
     }
 
     public void RemoveBox()
@@ -106,9 +107,10 @@ public class Square : MonoBehaviour
             Grid.squares[index].state &= ~eSquareState.highlighted;
             if (Input.GetMouseButtonUp(0))
             {
-                Grid.squares[index].AddBox();
-
-                PathChecker.Instance.AddBox(index);
+                if (Grid.squares[index].AddBox())
+                {
+                    PathChecker.Instance.AddBox(index);
+                }
             }
             else if (Input.GetMouseButtonUp(1))
             {
