@@ -22,35 +22,37 @@ public class AiPathing
 {
     static int MaxPath;
     static int LowestTotalPath;
+    static List<int> Entrances;
+    static List<int> Exits;
     public static Dictionary<int, Dictionary<int, Path>> MasterPath;
 
 
     public static Dictionary<int, Dictionary<int, Path>> CalculatePath(List<Vector2Int> enterances, List<Vector2Int> exits)
     {
-        List<int> enterancesIndex = new List<int>();
-        List<int> exitsIndex = new List<int>();
+        Entrances = new List<int>();
+        Exits = new List<int>();
 
         foreach (Vector2Int coord in enterances)
         {
-            enterancesIndex.Add(GridUtilities.TwoToOne(coord));
+            Entrances.Add(GridUtilities.TwoToOne(coord));
         }
 
         foreach (Vector2Int coord in exits)
         {
-            exitsIndex.Add(GridUtilities.TwoToOne(coord));
+            Exits.Add(GridUtilities.TwoToOne(coord));
         }
 
-        return CalculatePath(enterancesIndex, exitsIndex);
+        return CalculatePath();
     }
 
-    public static Dictionary<int, Dictionary<int, Path>> CalculatePath(List<int> enterances, List<int> exits)
+    public static Dictionary<int, Dictionary<int, Path>> CalculatePath()
     {
         Dictionary<int, Dictionary<int, Path>> allPaths = new Dictionary<int, Dictionary<int, Path>>();
 
-        foreach (int i in enterances)
+        foreach (int i in Entrances)
         {
             Dictionary<int, Path> currentPath = new Dictionary<int, Path>();
-            foreach (int j in exits)
+            foreach (int j in Exits)
             {
                 MaxPath = (Grid.width - 2) * (Grid.height - 2) + 2;
                 LowestTotalPath = MaxPath;
@@ -117,7 +119,7 @@ public class AiPathing
                 DownPath(newPath, endSquare, forward, 1, new Vector2Int(0,0));
                 if (newPath.FutureSquares.Count == 0)
                 {
-                    Debug.LogError($"No routes where found to exit {endSquare.gridCoord}");
+                    Debug.LogWarning($"No routes where found to exit {endSquare.gridCoord}");
                 }
                 else
                 {
@@ -160,52 +162,26 @@ public class AiPathing
             return null;
         }
 
-        currentPath.FutureSquares = new List<Path>();
-
         Vector2Int left = new Vector2Int(-forward.y, forward.x);
         Vector2Int right = -left;
 
-        Square next = null;
+        var forwardSquare = GridUtilities.GetNextSquare(current, forward);
+        var leftSquare = GridUtilities.GetNextSquare(current, left);
+        var rightSquare = GridUtilities.GetNextSquare(current, right);
 
-        next = -forward == lastTime ? null : GridUtilities.GetNextSquare(current, forward);
+        currentPath.FutureSquares = new List<Path>();
 
-        if (next != null && !next.hasBox)
+        if (-forward != lastTime)
         {
-            Path nextPath = new Path(next, currentPath);
-            nextPath = DownPath(nextPath, endSquare, forward, pathInt, forward);
-
-            if (nextPath != null)
-            {
-                currentPath.FutureSquares.Add(nextPath);
-            }
+            CheckNextPath(ref currentPath, forwardSquare, endSquare, forward, pathInt, forward);
         }
-
-
-        next = -left == lastTime ? null : GridUtilities.GetNextSquare(current, left);
-
-        if (next != null && !next.hasBox)
+        if (-left != lastTime)
         {
-            Path nextPath = new Path(next, currentPath);
-            nextPath = DownPath(nextPath, endSquare, forward, pathInt, left);
-
-            if (nextPath != null)
-            {
-                currentPath.FutureSquares.Add(nextPath);
-            }
+            CheckNextPath(ref currentPath, leftSquare, endSquare, forward, pathInt, left);
         }
-
-
-        next = -right == lastTime ? null : GridUtilities.GetNextSquare(current, right);
-
-        if (next != null && !next.hasBox)
+        if (-right != lastTime)
         {
-            Path nextPath = new Path(next, currentPath);
-            nextPath = DownPath(nextPath, endSquare, forward, pathInt, right);
-
-            if (nextPath != null)
-            {
-                currentPath.FutureSquares.Add(nextPath);
-            }
+            CheckNextPath(ref currentPath, rightSquare, endSquare, forward, pathInt, right);
         }
 
         if (currentPath.FutureSquares.Count > 0)
@@ -214,6 +190,20 @@ public class AiPathing
         }
 
         return null;
+    }
+
+    static void CheckNextPath(ref Path currentPath, Square next, Square endSquare, Vector2Int forward, int pathInt, Vector2Int dir)
+    {
+        if (next != null && !next.hasBox)
+        {
+            Path nextPath = new Path(next, currentPath);
+            nextPath = DownPath(nextPath, endSquare, forward, pathInt, dir);
+
+            if (nextPath != null)
+            {
+                currentPath.FutureSquares.Add(nextPath);
+            }
+        }
     }
 
 }

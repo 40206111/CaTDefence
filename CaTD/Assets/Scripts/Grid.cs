@@ -40,8 +40,6 @@ public class Grid : MonoBehaviour
             exits.Add(Grid.squares[i].gridCoord);
             Grid.squares[i].RemoveBox(force: true);
         }
-
-        AiPathing.MasterPath = AiPathing.CalculatePath(enterances, exits);
     }
 
     //This method will need to be called at the start of a level to generate the correct size of grid
@@ -96,7 +94,12 @@ public class Grid : MonoBehaviour
         Gizmos.color = Color.red;
 
         var enterancePaths = AiPathing.MasterPath[GridUtilities.TwoToOne(enterances[enterance])];
-        var exitPaths = enterancePaths[GridUtilities.TwoToOne(exits[exit])];
+
+        int key = GridUtilities.TwoToOne(exits[exit]);
+
+        if (!enterancePaths.ContainsKey(key)) return;
+
+        var exitPaths = enterancePaths[key];
 
         DrawPath(exitPaths);
     }

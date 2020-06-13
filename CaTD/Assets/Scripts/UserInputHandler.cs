@@ -55,5 +55,17 @@ public class UserInputHandler : MonoBehaviour
                 Grid.exit++;
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.U))
+        {
+            AiPathing.MasterPath = AiPathing.CalculatePath(Grid.enterances, Grid.exits);
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            CameraControl.Move = !CameraControl.Move;
+        }
+
     }
 }

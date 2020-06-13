@@ -14,6 +14,8 @@ public class CameraControl : MonoBehaviour
     Camera cam;
     List<Vector2> bounds = new List<Vector2>();
 
+    static public bool Move = true;
+
     public void CenterOnGrid()
     {
         Vector2 bottom = Grid.squares[0].pos;
@@ -74,6 +76,10 @@ public class CameraControl : MonoBehaviour
         float newCamSize = camSize + (scrollValue * zoomSpeed * Time.deltaTime * invertY);
         cam.orthographicSize = Mathf.Clamp(newCamSize, minSize, maxSize);
 
+        if (!Move)
+        {
+            return;
+        }
 
         //Edge detection
         if (mousePos.y > Screen.height * edgeLenience)
