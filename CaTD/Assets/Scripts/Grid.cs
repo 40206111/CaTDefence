@@ -7,8 +7,8 @@ public class Grid : MonoBehaviour
     [SerializeField] GameObject aBox;
     [SerializeField] CameraControl cameraControl;
 
-    static public int width = 13;
-    static public int height = 10;
+    static public int width = 7;
+    static public int height = 8;
 
     static public Square TopCorner;
     static public Square BottomCorner;
@@ -93,7 +93,11 @@ public class Grid : MonoBehaviour
 
         Gizmos.color = Color.red;
 
-        var enterancePaths = AiPathing.MasterPath[GridUtilities.TwoToOne(enterances[enterance])];
+        int enteranceKey = GridUtilities.TwoToOne(enterances[enterance]);
+
+        if (!AiPathing.MasterPath.ContainsKey(enteranceKey)) return;
+
+        var enterancePaths = AiPathing.MasterPath[enteranceKey];
 
         int key = GridUtilities.TwoToOne(exits[exit]);
 

@@ -89,7 +89,7 @@ public class AiPathing
 
                 if (current.hasBox)
                 {
-                    Debug.LogError("Enterance not valid");
+                    Debug.LogWarning("Enterance not valid");
                 }
 
                 Path newPath = new Path(current, head);
@@ -163,11 +163,22 @@ public class AiPathing
         }
 
         Vector2Int left = new Vector2Int(-forward.y, forward.x);
+        Vector2Int diagLeft = left.x != 0 ? new Vector2Int(left.x, forward.y) : new Vector2Int(forward.x, left.y);
         Vector2Int right = -left;
+        Vector2Int diagRight = -diagLeft;
+        Vector2Int back = -forward;
 
         var forwardSquare = GridUtilities.GetNextSquare(current, forward);
         var leftSquare = GridUtilities.GetNextSquare(current, left);
+        var diagLeftSquare = GridUtilities.GetNextSquare(current, diagLeft);
         var rightSquare = GridUtilities.GetNextSquare(current, right);
+        var diagRightSquare = GridUtilities.GetNextSquare(current, diagRight);
+        var backSquare = GridUtilities.GetNextSquare(current, back);
+
+        if (NextToAnExit(current, endSquare, leftSquare, rightSquare, forwardSquare, backSquare))
+        {
+            return null;
+        }
 
         currentPath.FutureSquares = new List<Path>();
 
@@ -175,13 +186,25 @@ public class AiPathing
         {
             CheckNextPath(ref currentPath, forwardSquare, endSquare, forward, pathInt, forward);
         }
-        if (-left != lastTime)
+        if (-left != lastTime && 
+           ((coord.x != endSquare.gridCoord.x && coord.y != endSquare.gridCoord.y) ||
+           (forwardSquare != null && forwardSquare.hasBox) ||
+           (diagLeftSquare != null && diagLeftSquare.hasBox)))
         {
             CheckNextPath(ref currentPath, leftSquare, endSquare, forward, pathInt, left);
         }
-        if (-right != lastTime)
+        if (-right != lastTime &&
+           ((coord.x != endSquare.gridCoord.x && coord.y != endSquare.gridCoord.y) ||
+           (forwardSquare != null && forwardSquare.hasBox) ||
+           (diagRightSquare != null && diagRightSquare.hasBox)))
         {
             CheckNextPath(ref currentPath, rightSquare, endSquare, forward, pathInt, right);
+        }
+        if (-back != lastTime &&
+           (leftSquare != null && leftSquare.hasBox) ||
+           (rightSquare != null && rightSquare.hasBox))
+        {
+            CheckNextPath(ref currentPath, backSquare, endSquare, forward, pathInt, back);
         }
 
         if (currentPath.FutureSquares.Count > 0)
@@ -190,6 +213,25 @@ public class AiPathing
         }
 
         return null;
+    }
+
+    static bool NextToAnExit(Square main, Square end, Square left, Square right, Square forward, Square back)
+    {
+        bool output = false;
+
+        output |= left?.gridCoord == end.gridCoord;
+        output |= right?.gridCoord == end.gridCoord;
+        output |= forward?.gridCoord == end.gridCoord;
+        output |= back?.gridCoord == end.gridCoord;
+
+        if (output) { return false;  }
+
+        output |= left != null && left.edge && Exits.Contains(GridUtilities.TwoToOne(left.gridCoord));
+        output |= right != null && right.edge && Exits.Contains(GridUtilities.TwoToOne(right.gridCoord));
+        output |= forward != null && left.edge && Exits.Contains(GridUtilities.TwoToOne(forward.gridCoord));
+        output |= back != null && left.edge && Exits.Contains(GridUtilities.TwoToOne(back.gridCoord));
+
+        return output;
     }
 
     static void CheckNextPath(ref Path currentPath, Square next, Square endSquare, Vector2Int forward, int pathInt, Vector2Int dir)

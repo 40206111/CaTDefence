@@ -14,7 +14,7 @@ public class CameraControl : MonoBehaviour
     Camera cam;
     List<Vector2> bounds = new List<Vector2>();
 
-    static public bool Move = true;
+    static public bool Move = false;
 
     public void CenterOnGrid()
     {
