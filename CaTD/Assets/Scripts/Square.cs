@@ -52,14 +52,15 @@ public class Square : MonoBehaviour
         return true;
     }
 
-    public void RemoveBox()
+    public bool RemoveBox()
     {
         if (!hasBox)
         {
-            return;
+            return false;
         }
         sr.sprite = squareSprite;
         hasBox = false;
+        return true;
     }
 
     void Awake()
@@ -114,7 +115,10 @@ public class Square : MonoBehaviour
             }
             else if (Input.GetMouseButtonUp(1))
             {
-                Grid.squares[index].RemoveBox();
+                if (Grid.squares[index].RemoveBox())
+                {
+                    PathChecker.Instance.RemoveBox(index);
+                }
             }
         }
     }

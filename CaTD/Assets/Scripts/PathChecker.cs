@@ -21,7 +21,16 @@ public class PCNode
     }
 
     public int distSource = -1;
-    public int faction = -1; // 0 is floor
+    private int faction = -1; // 0 is floor
+    public int Faction
+    {
+        get { return faction; }
+        set
+        {
+            faction = value;
+            PathChecker.Instance.UpdateDistanceText(id);
+        }
+    }
     public int id = -1;
     public Vector2Int position;
     public List<PCNode> neighbours = new List<PCNode>();
@@ -47,9 +56,9 @@ public class PCNode
         int lowest = int.MaxValue;
         foreach (PCNode n in neighbours)
         {
-            if (n.faction > 0)
+            if (n.Faction > 0)
             {
-                lowest = Mathf.Min(lowest, n.faction);
+                lowest = Mathf.Min(lowest, n.Faction);
             }
         }
         // If a faction was found: join it, and list neighbours who aren't a member
@@ -57,12 +66,12 @@ public class PCNode
         {
             foreach (PCNode n in neighbours)
             {
-                if (n.faction > 0 && n.faction != lowest)
+                if (n.Faction > 0 && n.Faction != lowest)
                 {
                     nodeQueue.Add(n.id);
                 }
             }
-            faction = lowest;
+            Faction = lowest;
             Distance = -1;
         }
         // If no faction found, make one
@@ -71,28 +80,30 @@ public class PCNode
             // Join an extinct faction if any exist
             if (freeFactions.Count > 0)
             {
-                faction = freeFactions[0];
+                Faction = freeFactions[0];
                 freeFactions.RemoveAt(0);
             }
             // Create a brand new faction
             else
             {
                 ++factionCount;
-                faction = factionCount;
+                Faction = factionCount;
             }
             Distance = 0;
         }
-        return faction;
+        return Faction;
     }
 
     public void ChangeFaction(ref List<int> nodeQueue, int newF)
     {
-        int oldF = faction;
-        faction = newF;
+        int oldF = Faction;
+        Faction = newF;
         Distance = -1;
+        ClearUppers();
+        ClearLowers();
         foreach (PCNode n in neighbours)
         {
-            if (n.faction == oldF)
+            if (n.Faction == oldF)
             {
                 if (!nodeQueue.Contains(n.id))
                 {
@@ -113,7 +124,7 @@ public class PCNode
         int lowest = int.MaxValue;
         foreach (PCNode n in neighbours)
         {
-            if (n.faction == faction && n.Distance != -1)
+            if (n.Faction == Faction && n.Distance != -1)
             {
                 lowest = Mathf.Min(lowest, n.Distance);
             }
@@ -128,7 +139,7 @@ public class PCNode
         Distance = lowest + 1;
         foreach (PCNode n in neighbours)
         {
-            if (n.faction == faction)
+            if (n.Faction == Faction)
             {
                 if (n.Distance == lowest)
                 {
@@ -138,9 +149,14 @@ public class PCNode
                         n.AdoptLower(this);
                     }
                 }
-                else if(n.Distance > Distance + 1)
+                else if (n.Distance > Distance + 1)
                 {
                     nodeQueue.Add(n.id);
+                }
+                else if (n.Distance == Distance + 1)
+                {
+                    lowers.Add(n);
+                    n.AddUpper(this);
                 }
             }
         }
@@ -151,7 +167,7 @@ public class PCNode
         CalculateDistance(ref nodeQueue);
         foreach (PCNode n in neighbours)
         {
-            if (n.faction == faction && n.Distance == -1 && !nodeQueue.Contains(n.id))
+            if (n.Faction == Faction && n.Distance == -1 && !nodeQueue.Contains(n.id))
             {
                 nodeQueue.Add(n.id);
             }
@@ -182,12 +198,30 @@ public class PCNode
         }
     }
 
+    private void ClearLowers()
+    {
+        foreach (PCNode n in lowers)
+        {
+            n.RemoveUpper(this);
+        }
+        lowers.Clear();
+    }
+
     public void RemoveUpper(PCNode u)
     {
         if (uppers.Contains(u))
         {
             uppers.Remove(u);
         }
+    }
+
+    private void ClearUppers()
+    {
+        foreach (PCNode n in uppers)
+        {
+            n.RemoveLower(this);
+        }
+        uppers.Clear();
     }
 
     public void UnmakeBox(ref List<int> nodeQueue)
@@ -199,6 +233,12 @@ public class PCNode
                 nodeQueue.Add(n.id);
             }
         }
+
+        Distance = -1;
+        Faction = 0;
+
+        ClearLowers();
+        ClearUppers();
     }
 
     public int SearchForParents(ref List<int> nodeQueue)
@@ -211,6 +251,28 @@ public class PCNode
 
         // If no parents wipe distance
         Distance = -1;
+
+        bool nodesAdded = false;
+
+        foreach (PCNode n in neighbours)
+        {
+            if (n.Faction == Faction && n.Distance != -1 && !nodeQueue.Contains(n.id))
+            {
+                nodeQueue.Add(n.id);
+                nodesAdded = true;
+            }
+        }
+        ClearLowers();
+
+        if (nodesAdded)
+        {
+            return 0;
+        }
+        else
+        {
+            return -1;
+        }
+
         // If no children, exit
         if (lowers.Count == 0)
         {
@@ -234,7 +296,7 @@ public class PCNode
     {
         foreach (PCNode n in neighbours)
         {
-            if (n.faction == faction && n.Distance == -1 && !nodeQueue.Contains(n.id))
+            if (n.Faction == Faction && n.Distance == -1 && !nodeQueue.Contains(n.id))
             {
                 nodeQueue.Add(n.id);
             }
@@ -247,7 +309,7 @@ public class PCNode
 
         foreach (PCNode n in neighbours)
         {
-            if (n.faction == faction && n.Distance != -1)
+            if (n.Faction == Faction && n.Distance != -1)
             {
                 lowest = Mathf.Min(n.Distance, lowest);
             }
@@ -263,21 +325,13 @@ public class PCNode
             Distance = lowest + 1;
         }
         // Clear uppers and remove self as lower from them
-        foreach (PCNode n in uppers)
-        {
-            n.RemoveLower(this);
-        }
-        uppers.Clear();
+        ClearUppers();
         // Clear lowers and remove self as upper
-        foreach (PCNode n in lowers)
-        {
-            n.RemoveUpper(this);
-        }
-        lowers.Clear();
+        ClearLowers();
         // Locate new uppers/lowers
         foreach (PCNode n in neighbours)
         {
-            if (n.faction == faction)
+            if (n.Faction == Faction)
             {
                 if (n.Distance == -1)
                 {
@@ -300,6 +354,7 @@ public class PCNode
             }
         }
     }
+
 }
 
 public class PathChecker : MonoBehaviour
@@ -384,44 +439,100 @@ public class PathChecker : MonoBehaviour
         }
     }
 
+    public void RemoveBox(int index)
+    {
+        RemoveBox(GridUtilities.OneToTwo(index));
+    }
+
     public void RemoveBox(Vector2Int pos)
     {
         List<int> orphans = new List<int>();
         nodes[GridUtilities.TwoToOne(pos)].UnmakeBox(ref orphans);
-        List<int> origins = new List<int>();
-        for (int i = 0; i < orphans.Count; ++i)
+        while (orphans.Count > 0)
         {
-            if (nodes[orphans[i]].SearchForParents(ref orphans) == 1)
+            List<int> origins = new List<int>();
+            for (int i = 0; i < orphans.Count; ++i)
             {
-                origins.Add(orphans[i]);
+                if (nodes[orphans[i]].SearchForParents(ref orphans) == 1)
+                {
+                    origins.Add(orphans[i]);
+                }
             }
-        }
 
-        orphans.Clear();
-        foreach (int i in origins)
-        {
-            nodes[i].NearbyOrphans(ref orphans);
-        }
+            if (origins.Count > 0)
+            {
+                List<int> usedOrigins = new List<int>();
+                List<int> nearOrphans = new List<int>();
+                foreach (int origin in origins)
+                {
+                    nodes[origin].NearbyOrphans(ref nearOrphans);
 
-        for (int i = 0; i < orphans.Count; ++i)
-        {
-            nodes[orphans[i]].CalculateDistanceCascade(ref orphans);
+                    for (int i = 0; i < nearOrphans.Count; ++i)
+                    {
+                        nodes[nearOrphans[i]].CalculateDistanceCascade(ref nearOrphans);
+                    }
+
+                    // Remove currunt origin and all related nodes from orphans
+                    nearOrphans.Add(origin);
+                    foreach (int n in nearOrphans)
+                    {
+                        if (orphans.Contains(n))
+                        {
+                            orphans.Remove(n);
+                        }
+                    }
+                    
+                    nearOrphans.Clear();
+                }
+            }
+            else if (orphans.Count > 0)
+            {
+                List<int> freeNodes = new List<int> { orphans[0] };
+                for (int i = 0; i < freeNodes.Count; ++i)
+                {
+                    nodes[freeNodes[i]].ChangeFaction(ref freeNodes, -1);
+                }
+
+                int newF = nodes[freeNodes[0]].MakeBox(ref origins);
+                for (int i = 1; i < freeNodes.Count; ++i)
+                {
+                    nodes[freeNodes[i]].ChangeFaction(ref freeNodes, newF);
+                }
+                // Calculate distances
+                List<int> miscounted = new List<int>();
+                foreach (int i in freeNodes)
+                {
+                    nodes[i].CalculateDistance(ref miscounted);
+                    for (int j = 0; j < miscounted.Count; ++j)
+                    {
+                        nodes[miscounted[j]].DistanceFix(ref miscounted);
+                    }
+                }
+
+                foreach (int i in freeNodes)
+                {
+                    if (orphans.Contains(i))
+                    {
+                        orphans.Remove(i);
+                    }
+                }
+            }
         }
     }
 
     public void UpdateDistanceText(int index)
     {
         nodeDistances[index].text = nodes[index].Distance.ToString();
-        nodeDistances[index].color = FancyColour(nodes[index].Distance);
+        nodeDistances[index].color = FancyColour(nodes[index].Faction);
     }
 
     private Color FancyColour(int distance)
     {
         Color returnColour = Color.black;
-        float loopCap = 50.0f;
+        float loopCap = 10.0f;
         returnColour.r = Mathf.Sin(Mathf.PI * 2.0f * distance / loopCap) * 0.5f + 0.5f;
-        returnColour.g = Mathf.Sin(Mathf.PI * 2.0f * (distance + (loopCap/3.0f)) / loopCap) * 0.5f + 0.5f;
-        returnColour.b = Mathf.Sin(Mathf.PI * 2.0f * (distance + (2.0f* loopCap/3.0f)) / loopCap) * 0.5f + 0.5f;
+        returnColour.g = Mathf.Sin(Mathf.PI * 2.0f * (distance + (loopCap / 3.0f)) / loopCap) * 0.5f + 0.5f;
+        returnColour.b = Mathf.Sin(Mathf.PI * 2.0f * (distance + (2.0f * loopCap / 3.0f)) / loopCap) * 0.5f + 0.5f;
         return returnColour;
     }
 }
