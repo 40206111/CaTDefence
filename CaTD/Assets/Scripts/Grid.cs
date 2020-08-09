@@ -7,8 +7,8 @@ public class Grid : MonoBehaviour
     [SerializeField] GameObject aBox;
     [SerializeField] CameraControl cameraControl;
 
-    static public int width = 7;
-    static public int height = 8;
+    static public int width = 11;
+    static public int height = 15;
 
     static public Square TopCorner;
     static public Square BottomCorner;
@@ -28,14 +28,14 @@ public class Grid : MonoBehaviour
         cameraControl.CenterOnGrid();
 
         enterances = new List<Vector2Int>();
-        for (int i = 1; i < Grid.width - 1; i++)
+        for (int i = 1; i < Grid.width - 1; i += 2)
         {
             enterances.Add(Grid.squares[i].gridCoord);
             Grid.squares[i].RemoveBox(force: true);
         }
 
         exits = new List<Vector2Int>();
-        for (int i = (Grid.squares.Count - Grid.width) + 1; i < Grid.squares.Count - 1; i++)
+        for (int i = (Grid.squares.Count - Grid.width) + 1; i <  Grid.squares.Count - 1; i += 2)
         {
             exits.Add(Grid.squares[i].gridCoord);
             Grid.squares[i].RemoveBox(force: true);

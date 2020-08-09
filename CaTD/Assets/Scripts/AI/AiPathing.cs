@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using JetBrains.Annotations;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,7 +26,10 @@ public class AiPathing
     static List<int> Entrances;
     static List<int> Exits;
     public static Dictionary<int, Dictionary<int, Path>> MasterPath;
+    static List<int> PathIds = new List<int>();
 
+    const int MaxBranch = 8;
+    static int Branches;
 
     public static Dictionary<int, Dictionary<int, Path>> CalculatePath(List<Vector2Int> enterances, List<Vector2Int> exits)
     {
@@ -54,6 +58,7 @@ public class AiPathing
             Dictionary<int, Path> currentPath = new Dictionary<int, Path>();
             foreach (int j in Exits)
             {
+                Branches = 0;
                 MaxPath = (Grid.width - 2) * (Grid.height - 2) + 2;
                 LowestTotalPath = MaxPath;
 
@@ -140,6 +145,10 @@ public class AiPathing
         {
             return null;
         }
+        if (Branches >= MaxBranch)
+        {
+            return null;
+        }
 
         Vector2Int coord = currentPath.Current.gridCoord;
         Square current = currentPath.Current;
@@ -151,6 +160,7 @@ public class AiPathing
                 MaxPath = (int)(pathInt * 1.2f);
                 LowestTotalPath = pathInt;
             }
+            Branches++;
             return currentPath;
         }
 
@@ -163,9 +173,9 @@ public class AiPathing
         }
 
         Vector2Int left = new Vector2Int(-forward.y, forward.x);
-        Vector2Int diagLeft = left.x != 0 ? new Vector2Int(left.x, forward.y) : new Vector2Int(forward.x, left.y);
+        Vector2Int diagLeft = left + forward;
         Vector2Int right = -left;
-        Vector2Int diagRight = -diagLeft;
+        Vector2Int diagRight = right + forward;
         Vector2Int back = -forward;
 
         var forwardSquare = GridUtilities.GetNextSquare(current, forward);
@@ -181,31 +191,34 @@ public class AiPathing
         }
 
         currentPath.FutureSquares = new List<Path>();
+        PathIds.Add(GridUtilities.TwoToOne(coord));
 
-        if (-forward != lastTime)
+        if (back != lastTime)
         {
             CheckNextPath(ref currentPath, forwardSquare, endSquare, forward, pathInt, forward);
         }
-        if (-left != lastTime && 
-           ((coord.x != endSquare.gridCoord.x && coord.y != endSquare.gridCoord.y) ||
+        if (right != lastTime && 
+           ((left.x != 0 && coord.x != endSquare.gridCoord.x || left.y != 0 && coord.y != endSquare.gridCoord.y) ||
            (forwardSquare != null && forwardSquare.hasBox) ||
            (diagLeftSquare != null && diagLeftSquare.hasBox)))
         {
             CheckNextPath(ref currentPath, leftSquare, endSquare, forward, pathInt, left);
         }
-        if (-right != lastTime &&
-           ((coord.x != endSquare.gridCoord.x && coord.y != endSquare.gridCoord.y) ||
+        if (left != lastTime &&
+           ((right.x != 0 && coord.x != endSquare.gridCoord.x || right.y != 0 && coord.y != endSquare.gridCoord.y) ||
            (forwardSquare != null && forwardSquare.hasBox) ||
            (diagRightSquare != null && diagRightSquare.hasBox)))
         {
             CheckNextPath(ref currentPath, rightSquare, endSquare, forward, pathInt, right);
         }
-        if (-back != lastTime &&
-           (leftSquare != null && leftSquare.hasBox) ||
-           (rightSquare != null && rightSquare.hasBox))
+        if (forward != lastTime &&
+           ((leftSquare != null && leftSquare.hasBox) ||
+           (rightSquare != null && rightSquare.hasBox)))
         {
             CheckNextPath(ref currentPath, backSquare, endSquare, forward, pathInt, back);
         }
+
+        PathIds.Remove(GridUtilities.TwoToOne(coord));
 
         if (currentPath.FutureSquares.Count > 0)
         {
@@ -233,10 +246,11 @@ public class AiPathing
 
         return output;
     }
-
+        
     static void CheckNextPath(ref Path currentPath, Square next, Square endSquare, Vector2Int forward, int pathInt, Vector2Int dir)
     {
-        if (next != null && !next.hasBox)
+        if (next != null && !next.hasBox &&
+            !PathIds.Contains(GridUtilities.TwoToOne(next.gridCoord)))
         {
             Path nextPath = new Path(next, currentPath);
             nextPath = DownPath(nextPath, endSquare, forward, pathInt, dir);
