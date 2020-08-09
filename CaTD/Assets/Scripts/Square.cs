@@ -20,6 +20,7 @@ public class Square : MonoBehaviour
     eSquareState state;
 
     public bool hasBox = false;
+    public bool edge = false;
     public Vector3 pos;
     public Vector2Int gridCoord;
 
@@ -27,7 +28,7 @@ public class Square : MonoBehaviour
     static Vector2Int endSquare;
     static List<int> drawPathIndexes = new List<int>();
     static bool drawHorizontal;
-    static Color highlightColour;
+    public static Color highlightColour;
     static Color selectColour = Color.green;
     static Color resetColour;
 
@@ -41,9 +42,9 @@ public class Square : MonoBehaviour
         gridCoord = coord;
     }
 
-    public bool AddBox()
+    public bool AddBox(bool force = false)
     {
-        if (hasBox)
+        if (hasBox || edge && !force)
         {
             return false;
         }
@@ -52,9 +53,9 @@ public class Square : MonoBehaviour
         return true;
     }
 
-    public bool RemoveBox()
+    public bool RemoveBox(bool force = false)
     {
-        if (!hasBox)
+        if (!hasBox || edge && !force)
         {
             return false;
         }
@@ -71,6 +72,7 @@ public class Square : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (edge) { return; }
         //set material colour based on state
         if (state.HasFlag(eSquareState.selected))
         {

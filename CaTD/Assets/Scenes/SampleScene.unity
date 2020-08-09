@@ -311,7 +311,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minSize: 2
   maxSize: 10
-  speed: 150
+  zoomSpeed: 150
+  moveSpeed: 4
+  edgeLenience: 0.95
   invertY: -1
 --- !u!1 &1794799186
 GameObject:
@@ -371,3 +373,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ac6f4cf93149c3499ae3b23fc947604, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  camControl: {fileID: 963194229}
