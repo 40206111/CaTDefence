@@ -31,6 +31,7 @@ public class UserInputHandler : MonoBehaviour
             camControl.CenterOnGrid();
         }
 
+#if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.O))
         {
             if (Grid.enterance + 1 >= Grid.enterances.Count)
@@ -58,8 +59,9 @@ public class UserInputHandler : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.U))
         {
-            AiPathing.MasterPath = AiPathing.CalculatePath(Grid.enterances, Grid.exits);
+            AiPathing.CalculatePath(Grid.enterances, Grid.exits);
         }
+#endif  
 
 
         if (Input.GetKeyDown(KeyCode.P))

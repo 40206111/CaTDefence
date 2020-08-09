@@ -83,11 +83,11 @@ public class Grid : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        //Gizmos.color = Color.green;
-        //foreach (Square point in squares)
-        //{
-        //    Gizmos.DrawSphere(point.pos, 0.2f);
-        //}
+        Gizmos.color = Color.green;
+        foreach (Square point in squares)
+        {
+            Gizmos.DrawSphere(point.pos, 0.1f);
+        }
 
         if (AiPathing.MasterPath == null) return;
 
@@ -121,7 +121,12 @@ public class Grid : MonoBehaviour
 
     void DrawPath(Square before, Path now)
     {
-        Gizmos.DrawLine(before.pos, now.Current.pos);
+        var beforePos = before.pos;
+        beforePos.z -= 5;
+        var nowPos = now.Current.pos;
+        nowPos.z -= 5;
+
+        Gizmos.DrawLine(beforePos, nowPos);
 
         if (now.FutureSquares == null) return;
 
