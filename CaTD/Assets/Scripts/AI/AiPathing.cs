@@ -30,6 +30,7 @@ public class AiPathing
 
     const int MaxBranch = 8;
     static int Branches;
+    static bool ExitFound => Branches > 0;
 
     public static Dictionary<int, Dictionary<int, Path>> CalculatePath(List<Vector2Int> enterances, List<Vector2Int> exits)
     {
@@ -198,14 +199,14 @@ public class AiPathing
             CheckNextPath(ref currentPath, forwardSquare, endSquare, forward, pathInt, forward);
         }
         if (right != lastTime && 
-           ((left.x != 0 && coord.x != endSquare.gridCoord.x || left.y != 0 && coord.y != endSquare.gridCoord.y) ||
+           ((!ExitFound && (left.x != 0 && coord.x != endSquare.gridCoord.x || left.y != 0 && coord.y != endSquare.gridCoord.y)) ||
            (forwardSquare != null && forwardSquare.hasBox) ||
            (diagLeftSquare != null && diagLeftSquare.hasBox)))
         {
             CheckNextPath(ref currentPath, leftSquare, endSquare, forward, pathInt, left);
         }
         if (left != lastTime &&
-           ((right.x != 0 && coord.x != endSquare.gridCoord.x || right.y != 0 && coord.y != endSquare.gridCoord.y) ||
+           ((!ExitFound && (right.x != 0 && coord.x != endSquare.gridCoord.x || right.y != 0 && coord.y != endSquare.gridCoord.y)) ||
            (forwardSquare != null && forwardSquare.hasBox) ||
            (diagRightSquare != null && diagRightSquare.hasBox)))
         {
