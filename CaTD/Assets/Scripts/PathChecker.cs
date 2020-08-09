@@ -272,24 +272,6 @@ public class PCNode
         {
             return -1;
         }
-
-        // If no children, exit
-        if (lowers.Count == 0)
-        {
-            return -1;
-        }
-
-        // If children add to queue for parent searching
-        foreach (PCNode n in lowers)
-        {
-            n.RemoveUpper(this);
-            if (!nodeQueue.Contains(n.id))
-            {
-                nodeQueue.Add(n.id);
-            }
-        }
-
-        return 0;
     }
 
     public void NearbyOrphans(ref List<int> nodeQueue)
@@ -461,7 +443,6 @@ public class PathChecker : MonoBehaviour
 
             if (origins.Count > 0)
             {
-                List<int> usedOrigins = new List<int>();
                 List<int> nearOrphans = new List<int>();
                 foreach (int origin in origins)
                 {
@@ -523,13 +504,13 @@ public class PathChecker : MonoBehaviour
     public void UpdateDistanceText(int index)
     {
         nodeDistances[index].text = nodes[index].Distance.ToString();
-        nodeDistances[index].color = FancyColour(nodes[index].Faction);
+        nodeDistances[index].color = FancyColour(nodes[index].Distance);
     }
 
     private Color FancyColour(int distance)
     {
         Color returnColour = Color.black;
-        float loopCap = 10.0f;
+        float loopCap = 30.0f;
         returnColour.r = Mathf.Sin(Mathf.PI * 2.0f * distance / loopCap) * 0.5f + 0.5f;
         returnColour.g = Mathf.Sin(Mathf.PI * 2.0f * (distance + (loopCap / 3.0f)) / loopCap) * 0.5f + 0.5f;
         returnColour.b = Mathf.Sin(Mathf.PI * 2.0f * (distance + (2.0f * loopCap / 3.0f)) / loopCap) * 0.5f + 0.5f;
