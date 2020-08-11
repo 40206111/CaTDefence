@@ -157,7 +157,7 @@ public class AiPathing
         return allPaths;
     }
 
-    static Path DownPath(Path currentPath, Square endSquare, Vector2Int forward, int pathInt, Vector2 lastTime)
+    static Path DownPath(Path currentPath, Square endSquare, Vector2Int forward, int pathInt, Vector2Int lastTime)
     {
         pathInt++;
 
@@ -186,6 +186,10 @@ public class AiPathing
 
         Vector2Int difCoord = coord - endSquare.gridCoord;
         int diff = Mathf.Abs(difCoord.x) + Mathf.Abs(difCoord.y);
+        if (pathInt + diff > MaxPath)
+        {
+            return null;
+        }    
 
         PathIds.Add(GridUtilities.TwoToOne(coord));
 
@@ -193,7 +197,7 @@ public class AiPathing
         //enterances/exits so there's no point in us checking them
         //if the straight distance to the exit will make out path too
         //long we shouldn't bother checking it either
-        if (GridUtilities.IsOnEdge(current) || pathInt + diff > MaxPath)
+        if (GridUtilities.IsOnEdge(current))
         {
             return null;
         }
@@ -204,11 +208,24 @@ public class AiPathing
         Vector2Int diagRight = right + forward;
         Vector2Int back = -forward;
 
+        if(RightIsBetter(current.gridCoord, endSquare.gridCoord, right))
+        {
+            Vector2Int temp = right;
+            right = left;
+            left = temp;
+
+            temp = diagRight;
+            diagRight = diagLeft;
+            diagLeft = temp;
+        }
+
         var forwardSquare = GridUtilities.GetNextSquare(current, forward);
         var leftSquare = GridUtilities.GetNextSquare(current, left);
         var diagLeftSquare = GridUtilities.GetNextSquare(current, diagLeft);
+        var diagBackLeftSquare = GridUtilities.GetNextSquare(current, -diagRight);
         var rightSquare = GridUtilities.GetNextSquare(current, right);
         var diagRightSquare = GridUtilities.GetNextSquare(current, diagRight);
+        var diagBackRightSquare = GridUtilities.GetNextSquare(current, -diagLeft);
         var backSquare = GridUtilities.GetNextSquare(current, back);
 
         currentPath.FutureSquares = new List<Path>();
@@ -237,7 +254,9 @@ public class AiPathing
         //BACK 
         if (forward != lastTime &&
            ((leftSquare != null && leftSquare.hasBox) ||
-           (rightSquare != null && rightSquare.hasBox)))
+           (rightSquare != null && rightSquare.hasBox) ||
+           (diagBackLeftSquare != null && diagBackLeftSquare.hasBox) ||
+           (diagBackRightSquare != null && diagBackRightSquare.hasBox)))
         {
             CheckNextPath(ref currentPath, backSquare, endSquare, forward, pathInt, back);
         }
@@ -286,4 +305,14 @@ public class AiPathing
         }
     }
 
+    static bool RightIsBetter(Vector2Int current, Vector2Int goal, Vector2Int right)
+    {
+        Vector2Int toGoal = goal - current;
+        int toGoalLength = Mathf.Abs(toGoal.x) + Mathf.Abs(toGoal.y);
+
+        Vector2Int toGoalNew = goal - (current + right);
+        int toGoalNewLength = Mathf.Abs(toGoalNew.x) + Mathf.Abs(toGoalNew.y);
+
+        return toGoalNewLength < toGoalLength;
+    }
 }
