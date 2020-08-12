@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent (typeof(SpriteRenderer))]
+[RequireComponent(typeof(SpriteRenderer))]
 public class Square : MonoBehaviour
 {
     [SerializeField] Sprite squareSprite;
@@ -19,7 +20,17 @@ public class Square : MonoBehaviour
 
     eSquareState state;
 
-    public bool hasBox = false;
+    private bool hasBox = false;
+    public bool HasBox
+    {
+        get { return hasBox; }
+        set
+        {
+            hasBox = value;
+            OnSquareChanged?.Invoke(gridCoord, hasBox);
+        }
+    }
+
     public bool edge = false;
     public Vector3 pos;
     public Vector2Int gridCoord;
@@ -31,6 +42,9 @@ public class Square : MonoBehaviour
     public static Color highlightColour;
     static Color selectColour = Color.green;
     static Color resetColour;
+
+    public delegate void SquareChanged(Vector2Int coord, bool boxAdded);
+    public static SquareChanged OnSquareChanged;
 
     public void CreateSquare(Vector3 newPos, Vector2Int coord)
     {
@@ -44,23 +58,23 @@ public class Square : MonoBehaviour
 
     public bool AddBox(bool force = false)
     {
-        if (hasBox || edge && !force)
+        if (HasBox || edge && !force)
         {
             return false;
         }
         sr.sprite = boxSprite;
-        hasBox = true;
+        HasBox = true;
         return true;
     }
 
     public bool RemoveBox(bool force = false)
     {
-        if (!hasBox || edge && !force)
+        if (!HasBox || edge && !force)
         {
             return false;
         }
         sr.sprite = squareSprite;
-        hasBox = false;
+        HasBox = false;
         return true;
     }
 
@@ -112,14 +126,14 @@ public class Square : MonoBehaviour
             {
                 if (Grid.squares[index].AddBox())
                 {
-                    PathChecker.Instance.AddBox(index);
+                    //PathChecker.Instance.AddBox(index);
                 }
             }
             else if (Input.GetMouseButtonUp(1))
             {
                 if (Grid.squares[index].RemoveBox())
                 {
-                    PathChecker.Instance.RemoveBox(index);
+                    //PathChecker.Instance.RemoveBox(index);
                 }
             }
         }

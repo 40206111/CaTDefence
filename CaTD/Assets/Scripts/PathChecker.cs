@@ -368,9 +368,14 @@ public class PathChecker : MonoBehaviour
     {
         instance = this;
     }
-    // Start is called before the first frame update
+    /* The class executes slightly early. 
+    Placing this Start function after Awake in Grid (creating the box array that needs to be referenced)
+    and before Start in Grid (placing down walls that need to reference what this Start does)
+     */
     void Start()
     {
+        Square.OnSquareChanged = SquareChanged;
+
         int length = Grid.width * Grid.height;
         for (int i = 0; i < length; ++i)
         {
@@ -395,6 +400,17 @@ public class PathChecker : MonoBehaviour
         }
     }
 
+    public void SquareChanged(Vector2Int pos, bool boxAdded)
+    {
+        if (boxAdded)
+        {
+            AddBox(pos);
+        }
+        else
+        {
+            RemoveBox(pos);
+        }
+    }
     public void AddBox(int index)
     {
         AddBox(GridUtilities.OneToTwo(index));
@@ -503,7 +519,7 @@ public class PathChecker : MonoBehaviour
 
     public void UpdateDistanceText(int index)
     {
-        nodeDistances[index].text = nodes[index].Distance.ToString();
+        nodeDistances[index].text = nodes[index].Faction.ToString();
         nodeDistances[index].color = FancyColour(nodes[index].Distance);
     }
 

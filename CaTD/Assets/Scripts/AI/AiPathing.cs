@@ -79,7 +79,7 @@ public class AiPathing
 
             startSquare = GridUtilities.GetNextSquare(startSquare, dirFromEntrance);
 
-            if (startSquare.hasBox)
+            if (startSquare.HasBox)
             {
                 Debug.LogWarning("Enterance not valid");
                 continue;
@@ -129,7 +129,7 @@ public class AiPathing
 
                 Square squareNextToExit = GridUtilities.GetNextSquare(endSquare, -forward);
 
-                if (squareNextToExit.hasBox)
+                if (squareNextToExit.HasBox)
                 {
                     Debug.LogWarning("Exit not valid");
                     continue;
@@ -221,23 +221,23 @@ public class AiPathing
         //LEFT
         if (right != lastTime && 
            ((!ExitFound && (left.x != 0 && coord.x != endSquare.gridCoord.x || left.y != 0 && coord.y != endSquare.gridCoord.y)) ||
-           (forwardSquare != null && forwardSquare.hasBox) ||
-           (diagLeftSquare != null && diagLeftSquare.hasBox)))
+           (forwardSquare != null && forwardSquare.HasBox) ||
+           (diagLeftSquare != null && diagLeftSquare.HasBox)))
         {
             CheckNextPath(ref currentPath, leftSquare, endSquare, forward, pathInt, left);
         }
         //RIGHT
         if (left != lastTime &&
            ((!ExitFound && (right.x != 0 && coord.x != endSquare.gridCoord.x || right.y != 0 && coord.y != endSquare.gridCoord.y)) ||
-           (forwardSquare != null && forwardSquare.hasBox) ||
-           (diagRightSquare != null && diagRightSquare.hasBox)))
+           (forwardSquare != null && forwardSquare.HasBox) ||
+           (diagRightSquare != null && diagRightSquare.HasBox)))
         {
             CheckNextPath(ref currentPath, rightSquare, endSquare, forward, pathInt, right);
         }
         //BACK 
         if (forward != lastTime &&
-           ((leftSquare != null && leftSquare.hasBox) ||
-           (rightSquare != null && rightSquare.hasBox)))
+           ((leftSquare != null && leftSquare.HasBox) ||
+           (rightSquare != null && rightSquare.HasBox)))
         {
             CheckNextPath(ref currentPath, backSquare, endSquare, forward, pathInt, back);
         }
@@ -273,7 +273,7 @@ public class AiPathing
         
     static void CheckNextPath(ref Path currentPath, Square next, Square endSquare, Vector2Int forward, int pathInt, Vector2Int dir)
     {
-        if (next != null && !next.hasBox &&
+        if (next != null && !next.HasBox &&
             !PathIds.Contains(GridUtilities.TwoToOne(next.gridCoord)))
         {
             Path nextPath = new Path(next, currentPath);

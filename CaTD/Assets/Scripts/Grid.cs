@@ -21,25 +21,27 @@ public class Grid : MonoBehaviour
     static public List<Vector2Int> exits;
 
     public static List<Square> squares = new List<Square>();
-
-    void Awake()
+    private void Awake()
     {
         GenerateGrid(width, height);
         cameraControl.CenterOnGrid();
-
+    }
+    void Start()
+    {
         enterances = new List<Vector2Int>();
         for (int i = 1; i < Grid.width - 1; i += 2)
         {
             enterances.Add(Grid.squares[i].gridCoord);
-            Grid.squares[i].RemoveBox(force: true);
+            //Grid.squares[i].RemoveBox(force: true);
         }
 
         exits = new List<Vector2Int>();
-        for (int i = (Grid.squares.Count - Grid.width) + 1; i <  Grid.squares.Count - 1; i += 2)
+        for (int i = (Grid.squares.Count - Grid.width) + 1; i < Grid.squares.Count - 1; i += 2)
         {
             exits.Add(Grid.squares[i].gridCoord);
-            Grid.squares[i].RemoveBox(force: true);
+            //Grid.squares[i].RemoveBox(force: true);
         }
+        GenerateOuterWalls();
     }
 
     //This method will need to be called at the start of a level to generate the correct size of grid
@@ -54,16 +56,44 @@ public class Grid : MonoBehaviour
             for (int j = 0; j < width; ++j)
             {
                 squares.Add(Instantiate(aBox, transform).GetComponent<Square>());
-                squares[squares.Count - 1].CreateSquare(new Vector3(start.x + j, start.y + (0.5f * j), (0.5f * j) + i), 
+                squares[squares.Count - 1].CreateSquare(new Vector3(start.x + j, start.y + (0.5f * j), (0.5f * j) + i),
                                                         new Vector2Int(j, i));
                 if (i == 0 || i == height - 1 || j == 0 || j == width - 1)
                 {
-                    squares[squares.Count - 1].AddBox(force: true);
                     squares[squares.Count - 1].edge = true;
                 }
             }
             start.x -= 1;
             start.y += 0.5f;
+        }
+    }
+
+    // This method is used to generate boxes AFTER PathChecker has had time to set up
+    void GenerateOuterWalls()
+    {
+        //Top & bottom walls
+        for (int y = 0; y < 2; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                int index = y * width * (height - 1) + x;
+                if (!(enterances.Contains(GridUtilities.OneToTwo(index)) || exits.Contains(GridUtilities.OneToTwo(index))))
+                {
+                    squares[index].AddBox(force: true);
+                }
+            }
+        }
+        // Left and right walls
+        for (int x = 0; x < 2; ++x)
+        {
+            for (int y = 0; y < height; ++y)
+            {
+                int index = x * (width - 1) + y * width;
+                if (!(enterances.Contains(GridUtilities.OneToTwo(index)) || exits.Contains(GridUtilities.OneToTwo(index))))
+                {
+                    squares[index].AddBox(force: true);
+                }
+            }
         }
     }
 
@@ -130,7 +160,7 @@ public class Grid : MonoBehaviour
 
         if (now.FutureSquares == null) return;
 
-        foreach(Path path in now.FutureSquares)
+        foreach (Path path in now.FutureSquares)
         {
             DrawPath(now.Current, path);
         }
