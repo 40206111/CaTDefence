@@ -22,24 +22,30 @@ public class Grid : MonoBehaviour
 
     public static List<Square> squares = new List<Square>();
 
+    public static AiPathing Pathing;
+
     void Awake()
     {
         GenerateGrid(width, height);
         cameraControl.CenterOnGrid();
 
         enterances = new List<Vector2Int>();
-        for (int i = 1; i < Grid.width - 1; i += 2)
+        //for (int i = 1; i < Grid.width - 1; i += 2)
         {
-            enterances.Add(Grid.squares[i].gridCoord);
-            Grid.squares[i].RemoveBox(force: true);
+            int index = Grid.squares.Count - Grid.width * 2;
+            enterances.Add(Grid.squares[index].gridCoord);
+            Grid.squares[index].RemoveBox(force: true);
         }
 
         exits = new List<Vector2Int>();
-        for (int i = (Grid.squares.Count - Grid.width) + 1; i <  Grid.squares.Count - 1; i += 2)
+        //for (int i = 1; i <  Grid.height - 1; i += 2)
         {
-            exits.Add(Grid.squares[i].gridCoord);
-            Grid.squares[i].RemoveBox(force: true);
+            int index = Grid.width;
+            exits.Add(Grid.squares[index].gridCoord);
+            Grid.squares[index].RemoveBox(force: true);
         }
+
+        Pathing = AiPathing.Instance;
     }
 
     //This method will need to be called at the start of a level to generate the correct size of grid
@@ -89,15 +95,15 @@ public class Grid : MonoBehaviour
             Gizmos.DrawSphere(point.pos, 0.1f);
         }
 
-        if (AiPathing.MasterPath == null) return;
+        if (Pathing?.MasterPath == null) return;
 
         Gizmos.color = Color.red;
 
         int enteranceKey = GridUtilities.TwoToOne(enterances[enterance]);
 
-        if (!AiPathing.MasterPath.ContainsKey(enteranceKey)) return;
+        if (!Pathing.MasterPath.ContainsKey(enteranceKey)) return;
 
-        var enterancePaths = AiPathing.MasterPath[enteranceKey];
+        var enterancePaths = Pathing.MasterPath[enteranceKey];
 
         int key = GridUtilities.TwoToOne(exits[exit]);
 
