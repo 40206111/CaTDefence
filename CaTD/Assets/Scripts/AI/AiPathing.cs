@@ -21,18 +21,45 @@ public class Path
 
 public class AiPathing
 {
-    static int MaxPath;
-    static int LowestTotalPath;
-    static List<int> Entrances;
-    static List<int> Exits;
-    public static Dictionary<int, Dictionary<int, Path>> MasterPath;
-    static List<int> PathIds = new List<int>();
+    public Dictionary<int, Dictionary<int, Path>> MasterPath;
+
+    int MaxPath;
+    int LowestTotalPath;
+    List<int> Entrances;
+    List<int> Exits;
+    List<int> PathIds = new List<int>();
 
     const int MaxBranch = 8;
-    static int Branches;
-    static bool ExitFound => Branches > 0;
+    int Branches;
+    bool ExitFound => Branches > 0;
+    bool Running = false;
 
-    public static void CalculatePath(List<Vector2Int> enterances, List<Vector2Int> exits)
+    Vector2Int forward;
+    Vector2Int left;
+    Vector2Int diagLeft;
+    Vector2Int right;
+    Vector2Int diagRight;
+    Vector2Int back;
+
+    Square endSquare;
+
+    static AiPathing instance;
+
+    public static AiPathing Instance 
+    {
+        get 
+        { 
+            if (instance == null)
+            {
+                instance = new AiPathing();
+            } 
+            return instance;
+        }
+    }
+
+    private AiPathing() { }
+
+    public void SetEnterancesAndExits(List<Vector2Int> enterances, List<Vector2Int> exits)
     {
         Entrances = new List<int>();
         Exits = new List<int>();
@@ -47,12 +74,17 @@ public class AiPathing
             Exits.Add(GridUtilities.TwoToOne(coord));
         }
 
-        MasterPath = CalculatePath();
     }
 
-    public static Dictionary<int, Dictionary<int, Path>> CalculatePath()
+    public IEnumerator<YieldInstruction> CalculatePath()
     {
-        Dictionary<int, Dictionary<int, Path>> allPaths = new Dictionary<int, Dictionary<int, Path>>();
+        if (Running)
+        {
+            yield break;
+        }
+
+        Running = true;
+        MasterPath = new Dictionary<int, Dictionary<int, Path>>();
 
         //for each entrance find path to every exit
         foreach (int i in Entrances)
@@ -97,7 +129,7 @@ public class AiPathing
                 Path head = new Path();
 
                 Square current = startSquare;
-                Square endSquare = Grid.squares[j];
+                endSquare = Grid.squares[j];
 
                 head.Current = startSquare;
                 head.FutureSquares = new List<Path>();
@@ -105,7 +137,7 @@ public class AiPathing
                 Path newPath = new Path(current, head);
                 head.FutureSquares.Add(newPath);
 
-                Vector2Int forward = dirFromEntrance;
+                forward = dirFromEntrance;
                 if (GridUtilities.IsLeft(j))
                 {
                     forward = new Vector2Int(-1, 0);
@@ -135,7 +167,13 @@ public class AiPathing
                     continue;
                 }
 
-                DownPath(newPath, endSquare, forward, 1, dirFromEntrance);
+                left = new Vector2Int(-forward.y, forward.x);
+                diagLeft = left + forward;
+                right = -left;
+                diagRight = right + forward;
+                back = -forward;
+
+                DownPath(newPath, 1, dirFromEntrance);
 
                 if (newPath.FutureSquares.Count == 0)
                 {
@@ -145,19 +183,21 @@ public class AiPathing
                 {
                     currentPath.Add(j, head);
                 }
+
+                yield return null;
             }
 
             if (currentPath.Count != 0)
             {
                 //add all paths from current entrance to all exits
-                allPaths.Add(i, currentPath);
+                MasterPath.Add(i, currentPath);
             }
         }
 
-        return allPaths;
+        Running = false;
     }
 
-    static Path DownPath(Path currentPath, Square endSquare, Vector2Int forward, int pathInt, Vector2 lastTime)
+    Path DownPath(Path currentPath, int pathInt, Vector2Int lastTime)
     {
         pathInt++;
 
@@ -186,6 +226,10 @@ public class AiPathing
 
         Vector2Int difCoord = coord - endSquare.gridCoord;
         int diff = Mathf.Abs(difCoord.x) + Mathf.Abs(difCoord.y);
+        if (pathInt + diff > MaxPath)
+        {
+            return null;
+        }    
 
         PathIds.Add(GridUtilities.TwoToOne(coord));
 
@@ -193,53 +237,56 @@ public class AiPathing
         //enterances/exits so there's no point in us checking them
         //if the straight distance to the exit will make out path too
         //long we shouldn't bother checking it either
-        if (GridUtilities.IsOnEdge(current) || pathInt + diff > MaxPath)
+        if (GridUtilities.IsOnEdge(current))
         {
             return null;
         }
 
-        Vector2Int left = new Vector2Int(-forward.y, forward.x);
-        Vector2Int diagLeft = left + forward;
-        Vector2Int right = -left;
-        Vector2Int diagRight = right + forward;
-        Vector2Int back = -forward;
+        if(RightIsBetter(current.gridCoord, endSquare.gridCoord, right))
+        {
+            Vector2Int temp = right;
+            right = left;
+            left = temp;
 
-        var forwardSquare = GridUtilities.GetNextSquare(current, forward);
-        var leftSquare = GridUtilities.GetNextSquare(current, left);
-        var diagLeftSquare = GridUtilities.GetNextSquare(current, diagLeft);
-        var rightSquare = GridUtilities.GetNextSquare(current, right);
-        var diagRightSquare = GridUtilities.GetNextSquare(current, diagRight);
-        var backSquare = GridUtilities.GetNextSquare(current, back);
+            temp = diagRight;
+            diagRight = diagLeft;
+            diagLeft = temp;
+        }
+
+        Square forwardSquare = GridUtilities.GetNextSquare(current, forward);
+        Square leftSquare = GridUtilities.GetNextSquare(current, left);
+        Square diagLeftSquare = GridUtilities.GetNextSquare(current, diagLeft);
+        Square diagBackLeftSquare = GridUtilities.GetNextSquare(current, -diagRight);
+        Square rightSquare = GridUtilities.GetNextSquare(current, right);
+        Square diagRightSquare = GridUtilities.GetNextSquare(current, diagRight);
+        Square diagBackRightSquare = GridUtilities.GetNextSquare(current, -diagLeft);
+        Square backSquare = GridUtilities.GetNextSquare(current, back);
 
         currentPath.FutureSquares = new List<Path>();
 
         //FORWARD
         if (back != lastTime)
         {
-            CheckNextPath(ref currentPath, forwardSquare, endSquare, forward, pathInt, forward);
+            CheckNextPath(ref currentPath, forwardSquare, pathInt, forward);
         }
         //LEFT
-        if (right != lastTime && 
-           ((!ExitFound && (left.x != 0 && coord.x != endSquare.gridCoord.x || left.y != 0 && coord.y != endSquare.gridCoord.y)) ||
-           (forwardSquare != null && forwardSquare.hasBox) ||
-           (diagLeftSquare != null && diagLeftSquare.hasBox)))
+        if (CheckDirection(left, forwardSquare, diagLeftSquare, lastTime, coord))
         {
-            CheckNextPath(ref currentPath, leftSquare, endSquare, forward, pathInt, left);
+            CheckNextPath(ref currentPath, leftSquare, pathInt, left);
         }
         //RIGHT
-        if (left != lastTime &&
-           ((!ExitFound && (right.x != 0 && coord.x != endSquare.gridCoord.x || right.y != 0 && coord.y != endSquare.gridCoord.y)) ||
-           (forwardSquare != null && forwardSquare.hasBox) ||
-           (diagRightSquare != null && diagRightSquare.hasBox)))
+        if (CheckDirection(right, forwardSquare, diagRightSquare, lastTime, coord))
         {
-            CheckNextPath(ref currentPath, rightSquare, endSquare, forward, pathInt, right);
+            CheckNextPath(ref currentPath, rightSquare, pathInt, right);
         }
         //BACK 
         if (forward != lastTime &&
            ((leftSquare != null && leftSquare.hasBox) ||
-           (rightSquare != null && rightSquare.hasBox)))
+           (rightSquare != null && rightSquare.hasBox) ||
+           (diagBackLeftSquare != null && diagBackLeftSquare.hasBox) ||
+           (diagBackRightSquare != null && diagBackRightSquare.hasBox)))
         {
-            CheckNextPath(ref currentPath, backSquare, endSquare, forward, pathInt, back);
+            CheckNextPath(ref currentPath, backSquare, pathInt, back);
         }
 
         PathIds.Remove(GridUtilities.TwoToOne(coord));
@@ -252,7 +299,16 @@ public class AiPathing
         return null;
     }
 
-    static bool NextToAnExit(Square end, Square left, Square right, Square forward, Square back)
+    bool CheckDirection (Vector2Int dir, Square boxCheckOne, Square boxCheckTwo, Vector2Int lastTime, Vector2Int coord)
+    {
+        return -dir != lastTime &&
+           ((!ExitFound && (dir.x != 0 && coord.x != endSquare.gridCoord.x || dir.y != 0 && coord.y != endSquare.gridCoord.y)) ||
+           (boxCheckOne != null && boxCheckOne.hasBox) ||
+           (boxCheckTwo != null && boxCheckTwo.hasBox));
+    }
+
+
+    bool NextToAnExit(Square end, Square left, Square right, Square forward, Square back)
     {
         bool output = false;
 
@@ -271,13 +327,13 @@ public class AiPathing
         return output;
     }
         
-    static void CheckNextPath(ref Path currentPath, Square next, Square endSquare, Vector2Int forward, int pathInt, Vector2Int dir)
+    void CheckNextPath(ref Path currentPath, Square next, int pathInt, Vector2Int dir)
     {
         if (next != null && !next.hasBox &&
             !PathIds.Contains(GridUtilities.TwoToOne(next.gridCoord)))
         {
             Path nextPath = new Path(next, currentPath);
-            nextPath = DownPath(nextPath, endSquare, forward, pathInt, dir);
+            nextPath = DownPath(nextPath, pathInt, dir);
 
             if (nextPath != null)
             {
@@ -286,4 +342,14 @@ public class AiPathing
         }
     }
 
+    static bool RightIsBetter(Vector2Int current, Vector2Int goal, Vector2Int right)
+    {
+        Vector2Int toGoal = goal - current;
+        int toGoalLength = Mathf.Abs(toGoal.x) + Mathf.Abs(toGoal.y);
+
+        Vector2Int toGoalNew = goal - (current + right);
+        int toGoalNewLength = Mathf.Abs(toGoalNew.x) + Mathf.Abs(toGoalNew.y);
+
+        return toGoalNewLength < toGoalLength;
+    }
 }
