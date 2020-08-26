@@ -281,10 +281,10 @@ public class AiPathing
         }
         //BACK 
         if (forward != lastTime &&
-           ((leftSquare != null && leftSquare.hasBox) ||
-           (rightSquare != null && rightSquare.hasBox) ||
-           (diagBackLeftSquare != null && diagBackLeftSquare.hasBox) ||
-           (diagBackRightSquare != null && diagBackRightSquare.hasBox)))
+           ((leftSquare != null && leftSquare.HasBox) ||
+           (rightSquare != null && rightSquare.HasBox) ||
+           (diagBackLeftSquare != null && diagBackLeftSquare.HasBox) ||
+           (diagBackRightSquare != null && diagBackRightSquare.HasBox)))
         {
             CheckNextPath(ref currentPath, backSquare, pathInt, back);
         }
@@ -303,8 +303,8 @@ public class AiPathing
     {
         return -dir != lastTime &&
            ((!ExitFound && (dir.x != 0 && coord.x != endSquare.gridCoord.x || dir.y != 0 && coord.y != endSquare.gridCoord.y)) ||
-           (boxCheckOne != null && boxCheckOne.hasBox) ||
-           (boxCheckTwo != null && boxCheckTwo.hasBox));
+           (boxCheckOne != null && boxCheckOne.HasBox) ||
+           (boxCheckTwo != null && boxCheckTwo.HasBox));
     }
 
 
