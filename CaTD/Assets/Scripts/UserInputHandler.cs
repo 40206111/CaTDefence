@@ -12,6 +12,7 @@ public class UserInputHandler : MonoBehaviour
 {
     [SerializeField] CameraControl camControl;
 
+
     void Update()
     {
         if (Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1))
@@ -59,7 +60,8 @@ public class UserInputHandler : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.U))
         {
-            AiPathing.CalculatePath(Grid.enterances, Grid.exits);
+            Grid.Pathing.SetEnterancesAndExits(Grid.enterances, Grid.exits);
+            StartCoroutine(Grid.Pathing.CalculatePath());
         }
 #endif  
 
