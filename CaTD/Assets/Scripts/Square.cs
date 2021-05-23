@@ -15,6 +15,7 @@ public class Square : MonoBehaviour
         none = 0,
         selected = 1 << 0,
         highlighted = 1 << 1,
+        pathCheck = 1 << 2,
     }
 
     eSquareState state;
@@ -29,6 +30,7 @@ public class Square : MonoBehaviour
     static List<int> drawPathIndexes = new List<int>();
     static bool drawHorizontal;
     public static Color highlightColour;
+    static Color pathColour = Color.blue;
     static Color selectColour = Color.green;
     static Color resetColour;
 
@@ -77,6 +79,10 @@ public class Square : MonoBehaviour
             SetMaterialColour(selectColour);
         }
         else if (state.HasFlag(eSquareState.highlighted))
+        {
+            SetMaterialColour(highlightColour);
+        }
+        else if (state.HasFlag(eSquareState.pathCheck))
         {
             SetMaterialColour(highlightColour);
         }

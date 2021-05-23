@@ -34,12 +34,12 @@ public class AiPathing
     bool ExitFound => Branches > 0;
     bool Running = false;
 
-    Vector2Int forward;
-    Vector2Int left;
-    Vector2Int diagLeft;
-    Vector2Int right;
-    Vector2Int diagRight;
-    Vector2Int back;
+    Vector2Int Forward;
+    Vector2Int Left;
+    Vector2Int DiagLeft;
+    Vector2Int Right;
+    Vector2Int DiagRight;
+    Vector2Int Back;
 
     Square endSquare;
 
@@ -137,29 +137,29 @@ public class AiPathing
                 Path newPath = new Path(current, head);
                 head.FutureSquares.Add(newPath);
 
-                forward = dirFromEntrance;
+                Forward = dirFromEntrance;
                 if (GridUtilities.IsLeft(j))
                 {
-                    forward = new Vector2Int(-1, 0);
+                    Forward = new Vector2Int(-1, 0);
                 }
                 else if (GridUtilities.IsRight(j))
                 {
-                    forward = new Vector2Int(1, 0);
+                    Forward = new Vector2Int(1, 0);
                 }
                 else if (GridUtilities.IsTop(j))
                 {
-                    forward = new Vector2Int(0, 1);
+                    Forward = new Vector2Int(0, 1);
                 }
                 else if (GridUtilities.IsBottom(j))
                 {
-                    forward = new Vector2Int(0, -1);
+                    Forward = new Vector2Int(0, -1);
                 }
                 else
                 {
                     Debug.LogError("Exit must be on edge of board");
                 }
 
-                Square squareNextToExit = GridUtilities.GetNextSquare(endSquare, -forward);
+                Square squareNextToExit = GridUtilities.GetNextSquare(endSquare, -Forward);
 
                 if (squareNextToExit.hasBox)
                 {
@@ -167,11 +167,11 @@ public class AiPathing
                     continue;
                 }
 
-                left = new Vector2Int(-forward.y, forward.x);
-                diagLeft = left + forward;
-                right = -left;
-                diagRight = right + forward;
-                back = -forward;
+                Left = new Vector2Int(-Forward.y, Forward.x);
+                DiagLeft = Left + Forward;
+                Right = -Left;
+                DiagRight = Right + Forward;
+                Back = -Forward;
 
                 DownPath(newPath, 1, dirFromEntrance);
 
@@ -242,51 +242,51 @@ public class AiPathing
             return null;
         }
 
-        if(RightIsBetter(current.gridCoord, endSquare.gridCoord, right))
+        if(RightIsBetter(current.gridCoord, endSquare.gridCoord, Right))
         {
-            Vector2Int temp = right;
-            right = left;
-            left = temp;
+            Vector2Int temp = Right;
+            Right = Left;
+            Left = temp;
 
-            temp = diagRight;
-            diagRight = diagLeft;
-            diagLeft = temp;
+            temp = DiagRight;
+            DiagRight = DiagLeft;
+            DiagLeft = temp;
         }
 
-        Square forwardSquare = GridUtilities.GetNextSquare(current, forward);
-        Square leftSquare = GridUtilities.GetNextSquare(current, left);
-        Square diagLeftSquare = GridUtilities.GetNextSquare(current, diagLeft);
-        Square diagBackLeftSquare = GridUtilities.GetNextSquare(current, -diagRight);
-        Square rightSquare = GridUtilities.GetNextSquare(current, right);
-        Square diagRightSquare = GridUtilities.GetNextSquare(current, diagRight);
-        Square diagBackRightSquare = GridUtilities.GetNextSquare(current, -diagLeft);
-        Square backSquare = GridUtilities.GetNextSquare(current, back);
+        Square forwardSquare = GridUtilities.GetNextSquare(current, Forward);
+        Square leftSquare = GridUtilities.GetNextSquare(current, Left);
+        Square diagLeftSquare = GridUtilities.GetNextSquare(current, DiagLeft);
+        Square diagBackLeftSquare = GridUtilities.GetNextSquare(current, -DiagRight);
+        Square rightSquare = GridUtilities.GetNextSquare(current, Right);
+        Square diagRightSquare = GridUtilities.GetNextSquare(current, DiagRight);
+        Square diagBackRightSquare = GridUtilities.GetNextSquare(current, -DiagLeft);
+        Square backSquare = GridUtilities.GetNextSquare(current, Back);
 
         currentPath.FutureSquares = new List<Path>();
 
         //FORWARD
-        if (back != lastTime)
+        if (Back != lastTime)
         {
-            CheckNextPath(ref currentPath, forwardSquare, pathInt, forward);
+            CheckNextPath(ref currentPath, forwardSquare, pathInt, Forward);
         }
         //LEFT
-        if (CheckDirection(left, forwardSquare, diagLeftSquare, lastTime, coord))
+        if (CheckDirection(Left, forwardSquare, diagLeftSquare, lastTime, coord))
         {
-            CheckNextPath(ref currentPath, leftSquare, pathInt, left);
+            CheckNextPath(ref currentPath, leftSquare, pathInt, Left);
         }
         //RIGHT
-        if (CheckDirection(right, forwardSquare, diagRightSquare, lastTime, coord))
+        if (CheckDirection(Right, forwardSquare, diagRightSquare, lastTime, coord))
         {
-            CheckNextPath(ref currentPath, rightSquare, pathInt, right);
+            CheckNextPath(ref currentPath, rightSquare, pathInt, Right);
         }
         //BACK 
-        if (forward != lastTime &&
+        if (Forward != lastTime &&
            ((leftSquare != null && leftSquare.hasBox) ||
            (rightSquare != null && rightSquare.hasBox) ||
            (diagBackLeftSquare != null && diagBackLeftSquare.hasBox) ||
            (diagBackRightSquare != null && diagBackRightSquare.hasBox)))
         {
-            CheckNextPath(ref currentPath, backSquare, pathInt, back);
+            CheckNextPath(ref currentPath, backSquare, pathInt, Back);
         }
 
         PathIds.Remove(GridUtilities.TwoToOne(coord));
@@ -332,7 +332,7 @@ public class AiPathing
         if (next != null && !next.hasBox &&
             !PathIds.Contains(GridUtilities.TwoToOne(next.gridCoord)))
         {
-            Path nextPath = new Path(next, currentPath);
+            Path nextPath = new Path(next, parent:currentPath);
             nextPath = DownPath(nextPath, pathInt, dir);
 
             if (nextPath != null)
